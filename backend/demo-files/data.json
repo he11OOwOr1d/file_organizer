@@ -1,0 +1,6 @@
+{
+  "project": "File System Management",
+  "description": "Demonstrates OS file storage and categorization",
+  "files": 5,
+  "categories": ["documents", "code", "images", "videos"]
+}

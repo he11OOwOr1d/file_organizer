@@ -1,0 +1,4 @@
+Annual Report 2024
+
+This is a sample text document demonstrating file storage and categorization.
+Operating systems organize files into directories and use metadata to manage them efficiently.
