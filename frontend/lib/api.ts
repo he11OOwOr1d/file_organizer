@@ -12,6 +12,7 @@ export interface FileItem {
   extension: string;
   category: string;
   mode?: string;
+  isStarred?: boolean;
 }
 
 export interface FilesResponse {
@@ -132,16 +133,35 @@ export const api = {
     return response.json();
   },
 
-  async deleteFile(filePath: string): Promise<{ success: boolean; message: string; itemType: string }> {
+  async deleteFile(filePath: string, permanent: boolean = false): Promise<{ success: boolean; message: string; itemType: string }> {
     const response = await fetch(`${API_URL}/files/delete`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filePath }),
+      body: JSON.stringify({ filePath, permanent }),
     });
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to delete file');
     }
+    return response.json();
+  },
+
+  async restoreFile(filePath: string): Promise<{ success: boolean; message: string; newPath: string }> {
+    const response = await fetch(`${API_URL}/files/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to restore file');
+    }
+    return response.json();
+  },
+
+  async getTrashFiles(): Promise<{ files: FileItem[]; total: number }> {
+    const response = await fetch(`${API_URL}/files/trash`);
+    if (!response.ok) throw new Error('Failed to fetch trash files');
     return response.json();
   },
 
@@ -155,6 +175,24 @@ export const api = {
       const error = await response.json();
       throw new Error(error.error || 'Failed to rename file');
     }
+    return response.json();
+  },
+
+
+  async getStarredFiles(): Promise<{ files: FileItem[]; total: number }> {
+    const response = await fetch(`${API_URL}/files/starred`);
+    if (!response.ok) throw new Error('Failed to fetch starred files');
+    return response.json();
+  },
+
+  async toggleStar(filePath: string, star: boolean): Promise<{ success: boolean; message: string }> {
+    const endpoint = star ? 'star' : 'unstar';
+    const response = await fetch(`${API_URL}/files/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath }),
+    });
+    if (!response.ok) throw new Error(`Failed to ${endpoint} file`);
     return response.json();
   },
 };

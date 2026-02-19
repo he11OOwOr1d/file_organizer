@@ -58,12 +58,12 @@ export function RenameDialog({
     try {
       setLoading(true);
       const result = await api.renameFile(file.path, newName);
-      
+
       toast({
         title: 'Success',
         description: result.message,
       });
-      
+
       setNewName('');
       onOpenChange(false);
       onRenameSuccess();
@@ -98,7 +98,7 @@ export function RenameDialog({
             Enter a new name for the {file.isDirectory ? 'folder' : 'file'}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="new-name">New Name</Label>
@@ -110,13 +110,14 @@ export function RenameDialog({
               onKeyDown={handleKeyDown}
               disabled={loading}
               autoFocus
+              onFocus={(e) => e.target.select()}
             />
           </div>
-          
+
           <div className="text-sm text-muted-foreground">
             <span className="font-medium">Current:</span> {file.name}
           </div>
-          
+
           <div className="text-sm text-muted-foreground">
             <span className="font-medium">Location:</span> {file.path}
           </div>

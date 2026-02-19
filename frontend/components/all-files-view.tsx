@@ -1,7 +1,7 @@
 'use client';
 
 import { FileItem, formatFileSize, formatDate } from '@/lib/api';
-import { File, Folder, FileText, Image, Video, Music, FileCode, FileArchive, Table as TableIcon, Edit2, Trash2 } from 'lucide-react';
+import { File, Folder, FileText, Image, Video, Music, FileCode, FileArchive, Table as TableIcon, Edit2, Trash2, FolderInput } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -20,7 +20,9 @@ interface AllFilesViewProps {
   files: (FileItem & { relativePath?: string })[];
   onFileClick: (file: FileItem) => void;
   onRename: (file: FileItem) => void;
+  onMove: (file: FileItem) => void;
   onDelete: (file: FileItem) => void;
+  onFileDoubleClick?: (file: FileItem) => void;
   onFolderNavigate?: (path: string) => void;
   hideSearch?: boolean;
   hidePath?: boolean;
@@ -65,11 +67,13 @@ function getCategoryColor(category: string) {
   return colors[category] || colors.other;
 }
 
-export function AllFilesView({ 
-  files, 
-  onFileClick, 
-  onRename, 
+export function AllFilesView({
+  files,
+  onFileClick,
+  onRename,
+  onMove,
   onDelete,
+  onFileDoubleClick,
   onFolderNavigate,
   hideSearch = false,
   hidePath = false
@@ -80,7 +84,7 @@ export function AllFilesView({
 
   // ... unchanged useMemo ...
   const filteredAndSortedFiles = useMemo(() => {
-    let result = files.filter(file => 
+    let result = files.filter(file =>
       file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (file.relativePath || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -149,27 +153,27 @@ export function AllFilesView({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]"></TableHead>
-              <TableHead 
+              <TableHead
                 className="cursor-pointer hover:bg-accent/50 w-[30%]"
                 onClick={() => handleSort('name')}
               >
                 Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="cursor-pointer hover:bg-accent/50 w-[15%]"
                 onClick={() => handleSort('category')}
               >
                 Category {sortBy === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
               </TableHead>
               {!hidePath && <TableHead className="w-[30%]">Path</TableHead>}
-              <TableHead 
+              <TableHead
                 className="cursor-pointer hover:bg-accent/50 text-right w-[10%]"
                 onClick={() => handleSort('size')}
               >
                 Size {sortBy === 'size' && (sortOrder === 'asc' ? '↑' : '↓')}
               </TableHead>
               {/* Hidden on small screens to save space */}
-              <TableHead 
+              <TableHead
                 className="cursor-pointer hover:bg-accent/50 hidden md:table-cell w-[15%]"
                 onClick={() => handleSort('modified')}
               >
@@ -180,13 +184,15 @@ export function AllFilesView({
           </TableHeader>
           <TableBody>
             {filteredAndSortedFiles.map((file, index) => (
-              <TableRow 
-                key={`${file.path}-${index}`}
-                className="hover:bg-accent/50 group cursor-pointer"
-                onClick={() => onFileClick(file)}
+              <TableRow
+                key={file.path}
+                className="group cursor-pointer hover:bg-muted/50"
+                onClick={() => onFileClick?.(file)}
                 onDoubleClick={() => {
                   if (file.isDirectory && onFolderNavigate) {
                     onFolderNavigate(file.path);
+                  } else if (!file.isDirectory) {
+                    onFileDoubleClick?.(file);
                   }
                 }}
               >
@@ -198,9 +204,9 @@ export function AllFilesView({
                   </Badge>
                 </TableCell>
                 {!hidePath && (
-                    <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]" title={file.relativePath || '/'}>
+                  <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]" title={file.relativePath || '/'}>
                     {file.relativePath || '/'}
-                    </TableCell>
+                  </TableCell>
                 )}
                 <TableCell className="text-right text-sm whitespace-nowrap">
                   {!file.isDirectory && formatFileSize(file.size)}
@@ -210,9 +216,9 @@ export function AllFilesView({
                 </TableCell>
                 <TableCell className="sticky right-0 bg-background shadow-[-5px_0_10px_-5px_rgba(0,0,0,0.1)] group-hover:bg-accent/50 transition-colors">
                   <div className="flex items-center justify-center gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-100/20"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -222,8 +228,20 @@ export function AllFilesView({
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-100/20"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMove(file);
+                      }}
+                      title="Move"
+                    >
+                      <FolderInput className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-100/20"
                       onClick={(e) => {

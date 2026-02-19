@@ -9,13 +9,14 @@ import { Card } from '@/components/ui/card';
 interface FileExplorerProps {
   files: FileItem[];
   onFileClick?: (file: FileItem) => void;
+  onFileDoubleClick?: (file: FileItem) => void;
   onFolderNavigate?: (path: string) => void;
   selectedFile?: FileItem | null;
 }
 
 const getFileIcon = (file: FileItem) => {
   if (file.isDirectory) return Folder;
-  
+
   switch (file.category) {
     case 'code':
       return FileCode;
@@ -48,7 +49,7 @@ const getCategoryColor = (category: string) => {
   return colors[category] || colors.other;
 };
 
-export function FileExplorer({ files, onFileClick, onFolderNavigate, selectedFile }: FileExplorerProps) {
+export function FileExplorer({ files, onFileClick, onFileDoubleClick, onFolderNavigate, selectedFile }: FileExplorerProps) {
   const handleItemClick = (file: FileItem) => {
     onFileClick?.(file);
   };
@@ -56,6 +57,11 @@ export function FileExplorer({ files, onFileClick, onFolderNavigate, selectedFil
   const handleItemDoubleClick = (file: FileItem) => {
     if (file.isDirectory && onFolderNavigate) {
       onFolderNavigate(file.path);
+    } else if (!file.isDirectory && onFileClick) {
+      // Allow double click to trigger a separate action if needed, 
+      // but for now let's just ensure it calls a prop we can hook into for preview
+      // Actually, let's add a specific prop for this
+      onFileDoubleClick?.(file);
     }
   };
 
@@ -64,7 +70,7 @@ export function FileExplorer({ files, onFileClick, onFolderNavigate, selectedFil
       {files.map((file, index) => {
         const Icon = getFileIcon(file);
         const isSelected = selectedFile?.path === file.path;
-        
+
         return (
           <motion.div
             key={file.path}
@@ -73,29 +79,26 @@ export function FileExplorer({ files, onFileClick, onFolderNavigate, selectedFil
             transition={{ delay: index * 0.03, duration: 0.2 }}
           >
             <Card
-              className={`p-4 cursor-pointer transition-all duration-200 group border relative overflow-hidden ${
-                isSelected 
-                  ? 'bg-primary/10 border-primary ring-1 ring-primary' 
-                  : 'hover:bg-muted/50 hover:border-primary/50 bg-card/50 backdrop-blur-sm'
-              }`}
+              className={`p-4 cursor-pointer transition-all duration-200 group border relative overflow-hidden ${isSelected
+                ? 'bg-primary/10 border-primary ring-1 ring-primary'
+                : 'hover:bg-muted/50 hover:border-primary/50 bg-card/50 backdrop-blur-sm'
+                }`}
               onClick={() => handleItemClick(file)}
               onDoubleClick={() => handleItemDoubleClick(file)}
             >
               <div className="flex flex-col items-center gap-3 text-center">
-                <div className={`p-3 rounded-xl transition-colors ${
-                  isSelected 
-                    ? 'bg-primary/20 text-primary' 
-                    : file.isDirectory 
-                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' 
-                      : getCategoryColor(file.category)
-                }`}>
+                <div className={`p-3 rounded-xl transition-colors ${isSelected
+                  ? 'bg-primary/20 text-primary'
+                  : file.isDirectory
+                    ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                    : getCategoryColor(file.category)
+                  }`}>
                   <Icon className="w-8 h-8" />
                 </div>
-                
+
                 <div className="w-full min-w-0">
-                  <p className={`font-medium text-sm truncate transition-colors ${
-                    isSelected ? 'text-primary' : 'text-foreground'
-                  }`}>
+                  <p className={`font-medium text-sm truncate transition-colors ${isSelected ? 'text-primary' : 'text-foreground'
+                    }`}>
                     {file.name}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -103,7 +106,7 @@ export function FileExplorer({ files, onFileClick, onFolderNavigate, selectedFil
                   </p>
                 </div>
               </div>
-              
+
               {file.isDirectory && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">

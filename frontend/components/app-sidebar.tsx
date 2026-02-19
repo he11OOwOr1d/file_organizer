@@ -1,11 +1,11 @@
 'use client';
 
-import { 
-  Folder, 
-  Clock, 
-  Trash2, 
-  Star, 
-  Settings, 
+import {
+  Folder,
+  Clock,
+  Trash2,
+  Star,
+  Settings,
   HelpCircle,
   HardDrive,
   Cloud
@@ -27,10 +27,10 @@ export function AppSidebar({ currentView, onViewChange, onStorageClick, classNam
 
   useEffect(() => {
     api.getStorageStats().then(setStorage).catch(console.error);
-    
+
     // Refresh storage stats every 5 seconds to keep it live
     const interval = setInterval(() => {
-         api.getStorageStats().then(setStorage).catch(console.error);
+      api.getStorageStats().then(setStorage).catch(console.error);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -38,6 +38,7 @@ export function AppSidebar({ currentView, onViewChange, onStorageClick, classNam
   const navItems = [
     { id: 'folders', label: 'My Files', icon: Folder, variant: 'default' },
     { id: 'recent', label: 'Recent', icon: Clock, variant: 'default' },
+    { id: 'starred', label: 'Starred', icon: Star, variant: 'default' },
     { id: 'trash', label: 'Trash', icon: Trash2, variant: 'destructive' },
   ] as const;
 
@@ -63,7 +64,8 @@ export function AppSidebar({ currentView, onViewChange, onStorageClick, classNam
             className={cn(
               "w-full justify-start gap-3 h-10 px-4 font-normal transition-all duration-200",
               currentView === item.id ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted/50",
-              item.id === 'trash' && currentView === item.id && "bg-red-500/10 text-red-500 hover:bg-red-500/15"
+              item.id === 'trash' && currentView === item.id && "bg-red-500/10 text-red-500 hover:bg-red-500/15",
+              item.id === 'starred' && currentView === item.id && "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/15"
             )}
             onClick={() => onViewChange(item.id)}
           >
@@ -74,9 +76,9 @@ export function AppSidebar({ currentView, onViewChange, onStorageClick, classNam
       </div>
 
       <div className="mt-auto space-y-4">
-        <div 
-            className="px-4 py-4 bg-muted/30 rounded-xl border cursor-pointer hover:bg-muted/50 transition-colors group"
-            onClick={onStorageClick}
+        <div
+          className="px-4 py-4 bg-muted/30 rounded-xl border cursor-pointer hover:bg-muted/50 transition-colors group"
+          onClick={onStorageClick}
         >
           <div className="flex items-center gap-3 mb-2">
             <HardDrive className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
@@ -84,10 +86,10 @@ export function AppSidebar({ currentView, onViewChange, onStorageClick, classNam
             <span className="ml-auto text-xs font-medium text-muted-foreground">{storage.percentage}%</span>
           </div>
           <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-            <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500 ease-out" 
-                style={{ width: `${storage.percentage}%` }}
-            /> 
+            <div
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${storage.percentage}%` }}
+            />
           </div>
           <p className="text-xs text-muted-foreground mt-2 flex justify-between">
             <span>{formatFileSize(storage.used)} used</span>

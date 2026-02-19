@@ -19,6 +19,7 @@ interface DeleteConfirmationDialogProps {
   onOpenChange: (open: boolean) => void;
   file: FileItem | null;
   onDeleteSuccess: () => void;
+  isPermanent?: boolean;
 }
 
 export function DeleteConfirmationDialog({
@@ -26,6 +27,7 @@ export function DeleteConfirmationDialog({
   onOpenChange,
   file,
   onDeleteSuccess,
+  isPermanent = false,
 }: DeleteConfirmationDialogProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -35,13 +37,13 @@ export function DeleteConfirmationDialog({
 
     try {
       setLoading(true);
-      const result = await api.deleteFile(file.path);
-      
+      const result = await api.deleteFile(file.path, isPermanent);
+
       toast({
         title: 'Success',
         description: result.message,
       });
-      
+
       onOpenChange(false);
       onDeleteSuccess();
     } catch (error) {
@@ -66,10 +68,12 @@ export function DeleteConfirmationDialog({
             Delete {file.isDirectory ? 'Folder' : 'File'}
           </DialogTitle>
           <DialogDescription>
-            This action cannot be undone. This will permanently delete the {file.isDirectory ? 'folder' : 'file'}.
+            {isPermanent
+              ? `This action cannot be undone. This will permanently delete the ${file.isDirectory ? 'folder' : 'file'}.`
+              : `This will move the ${file.isDirectory ? 'folder' : 'file'} to Trash. You can restore it later.`}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
             {file.isDirectory ? (
@@ -82,11 +86,17 @@ export function DeleteConfirmationDialog({
               <p className="text-xs text-muted-foreground break-all line-clamp-3">{file.path}</p>
             </div>
           </div>
-          
-          {file.isDirectory && (
+
+          {file.isDirectory && isPermanent && (
             <div className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500 bg-amber-500/10 p-3 rounded-md border border-amber-500/20">
               <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <p>This folder and all its contents will be permanently deleted.</p>
+            </div>
+          )}
+          {file.isDirectory && !isPermanent && (
+            <div className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-500/10 p-3 rounded-md border border-blue-500/20">
+              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <p>This folder and all its contents will be moved to Trash.</p>
             </div>
           )}
         </div>
@@ -99,9 +109,9 @@ export function DeleteConfirmationDialog({
           >
             Cancel
           </Button>
-          <Button 
-            variant="destructive" 
-            onClick={handleDelete} 
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
             disabled={loading}
           >
             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
