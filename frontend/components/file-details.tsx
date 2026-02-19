@@ -3,14 +3,8 @@
 import { FileItem } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, HardDrive, Shield, FileType, Clock, Edit, Move, Trash2, AlertCircle } from 'lucide-react';
+import { Calendar, HardDrive, Shield, FileType, Clock, Edit, Move, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { MoveFileDialog } from './move-file-dialog';
 import { useState } from 'react';
 import { api } from '@/lib/api';
@@ -18,9 +12,11 @@ import { api } from '@/lib/api';
 interface FileDetailsProps {
     file: FileItem | null;
     onRefresh?: () => void;
+    onRename?: (file: FileItem) => void;
+    onDelete?: (file: FileItem) => void;
 }
 
-export function FileDetails({ file, onRefresh }: FileDetailsProps) {
+export function FileDetails({ file, onRefresh, onRename, onDelete }: FileDetailsProps) {
   const [showMoveDialog, setShowMoveDialog] = useState(false);
 
   const handleMove = async (destinationPath: string) => {
@@ -131,7 +127,15 @@ export function FileDetails({ file, onRefresh }: FileDetailsProps) {
             <div className="pt-4 border-t space-y-3">
                 <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Actions</h4>
                 <div className="grid grid-cols-3 gap-2">
-                    <ActionButton icon={Edit} label="Rename" color="text-blue-500" />
+                    <Button 
+                        variant="outline" 
+                        className="flex flex-col h-14 gap-1 hover:bg-muted text-blue-500"
+                        onClick={() => file && onRename?.(file)}
+                        disabled={!onRename}
+                    >
+                        <Edit className="w-4 h-4" />
+                        <span className="text-[10px]">Rename</span>
+                    </Button>
                     <Button 
                         variant="outline" 
                         className="flex flex-col h-14 gap-1 hover:bg-muted text-orange-500"
@@ -140,7 +144,15 @@ export function FileDetails({ file, onRefresh }: FileDetailsProps) {
                         <Move className="w-4 h-4" />
                         <span className="text-[10px]">Move</span>
                     </Button>
-                    <ActionButton icon={Trash2} label="Delete" color="text-red-500" />
+                    <Button 
+                        variant="outline" 
+                        className="flex flex-col h-14 gap-1 hover:bg-muted text-red-500"
+                        onClick={() => file && onDelete?.(file)}
+                        disabled={!onDelete}
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="text-[10px]">Delete</span>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -159,23 +171,3 @@ export function FileDetails({ file, onRefresh }: FileDetailsProps) {
   );
 }
 
-function ActionButton({ icon: Icon, label, color }: { icon: any, label: string, color: string }) {
-    return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="outline" className={`flex flex-col h-14 gap-1 hover:bg-muted ${color}`}>
-                        <Icon className="w-4 h-4" />
-                        <span className="text-[10px]">{label}</span>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <div className="flex items-center gap-2 text-yellow-500">
-                        <AlertCircle className="w-4 h-4" />
-                        <p>Not Implemented (50% State)</p>
-                    </div>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    )
-}

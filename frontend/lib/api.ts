@@ -1,6 +1,6 @@
 // API client for file system backend
 
-const API_URL = 'http://localhost:5001/api';
+const API_URL = 'http://localhost:5002/api';
 
 export interface FileItem {
   name: string;
@@ -32,6 +32,12 @@ export interface CategorizeResponse {
   totalSize: number;
 }
 
+export interface StorageStats {
+  used: number;
+  limit: number;
+  percentage: number;
+}
+
 export const api = {
   async getFiles(path?: string): Promise<FilesResponse> {
     const url = path ? `${API_URL}/files?path=${encodeURIComponent(path)}` : `${API_URL}/files`;
@@ -40,10 +46,20 @@ export const api = {
     return response.json();
   },
 
+  getStorageStats: async (): Promise<StorageStats> => {
+    const response = await fetch(`${API_URL}/storage`);
+    if (!response.ok) throw new Error('Failed to fetch storage stats');
+    return response.json();
+  },
+
   async getFileMetadata(path: string): Promise<FileItem> {
     const response = await fetch(`${API_URL}/files/metadata?path=${encodeURIComponent(path)}`);
     if (!response.ok) throw new Error('Failed to fetch file metadata');
     return response.json();
+  },
+
+  getFileContentUrl(path: string): string {
+    return `${API_URL}/files/content?path=${encodeURIComponent(path)}`;
   },
 
   async getCategorization(path?: string): Promise<CategorizeResponse> {
@@ -78,6 +94,67 @@ export const api = {
     });
 
     if (!response.ok) throw new Error('Failed to upload file');
+    return response.json();
+  },
+
+  async getAllFiles(path?: string): Promise<{ basePath: string; searchPath: string; files: FileItem[]; total: number }> {
+    const url = path ? `${API_URL}/files/all?path=${encodeURIComponent(path)}` : `${API_URL}/files/all`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch all files');
+    return response.json();
+  },
+
+  async searchFiles(query: string, path?: string): Promise<{ query: string; files: FileItem[]; total: number }> {
+    const url = path
+      ? `${API_URL}/files/search?q=${encodeURIComponent(query)}&path=${encodeURIComponent(path)}`
+      : `${API_URL}/files/search?q=${encodeURIComponent(query)}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to search files');
+    return response.json();
+  },
+
+  async createFolder(folderName: string, parentPath?: string): Promise<{ success: boolean; folder: FileItem; message: string }> {
+    const response = await fetch(`${API_URL}/folders/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folderName, parentPath }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create folder');
+    }
+    return response.json();
+  },
+
+  async getRecentFiles(): Promise<{ files: FileItem[]; total: number }> {
+    const response = await fetch(`${API_URL}/files/recent`);
+    if (!response.ok) throw new Error('Failed to fetch recent files');
+    return response.json();
+  },
+
+  async deleteFile(filePath: string): Promise<{ success: boolean; message: string; itemType: string }> {
+    const response = await fetch(`${API_URL}/files/delete`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete file');
+    }
+    return response.json();
+  },
+
+  async renameFile(filePath: string, newName: string): Promise<{ success: boolean; file: FileItem; message: string }> {
+    const response = await fetch(`${API_URL}/files/rename`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath, newName }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to rename file');
+    }
     return response.json();
   },
 };
